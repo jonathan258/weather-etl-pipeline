@@ -1,1 +1,4 @@
 .env
+weather_data.db
+__pycache__/
+*.pyc

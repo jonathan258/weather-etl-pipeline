@@ -1,15 +1,176 @@
 # Weather ETL Pipeline
 
-## What it does
-Pulls live weather data from OpenWeather API and loads it into a pandas DataFrame.
+A beginner data engineering project that pulls live weather data from the OpenWeather API, cleans and transforms it using pandas, and stores it in a local SQLite database.
 
-## Stack
-- Python, pandas, requests
+Built as part of a structured learning path to become a data engineer.
 
-## Pipeline
-Extract (API) → Transform (pandas) → Load (SQLite)
+---
 
-## How to run
-1. Clone the repo
-2. Add your API key to a .env file
-3. Run weather_api.py
+## What It Does
+
+- Pulls live weather data for Charlottetown, PEI from the OpenWeather API
+- Cleans and transforms the data using pandas
+- Stores each record in a local SQLite database
+- Allows SQL queries to analyze the collected data over time
+
+---
+
+## Pipeline Architecture
+
+```
+OpenWeather API
+      ↓
+  extract.py   →   Hits the API and returns raw JSON
+      ↓
+  transform.py →   Cleans and transforms data into a pandas DataFrame
+      ↓
+  load.py      →   Saves the DataFrame to a SQLite database
+      ↓
+  weather_data.db  (local database)
+```
+
+---
+
+## Project Structure
+
+```
+weather-etl-pipeline/
+├── .env                  # Your API key (never commit this)
+├── .gitignore            # Ignores .env and weather_data.db
+├── requirements.txt      # Project dependencies
+├── main.py               # Runs the full pipeline
+├── extract.py            # API call and data extraction
+├── transform.py          # Data cleaning and transformation
+├── load.py               # Saves data to SQLite
+└── queries.py            # SQL queries for analysis
+```
+
+---
+
+## Getting Started
+
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/your-username/weather-etl-pipeline.git
+cd weather-etl-pipeline
+```
+
+### 2. Install dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+### 3. Get a free API key
+
+- Sign up at [openweathermap.org](https://openweathermap.org/api)
+- Go to your account and copy your API key
+- Note: new API keys can take up to 2 hours to activate
+
+### 4. Set up your environment variables
+
+Create a `.env` file in the root of the project:
+
+```
+OPENWEATHER_API_KEY=your_api_key_here
+```
+
+### 5. Run the pipeline
+
+```bash
+python main.py
+```
+
+### 6. Query the data
+
+```bash
+python queries.py
+```
+
+---
+
+## What Each File Does
+
+### `main.py`
+The entry point. Calls extract, transform, and load in sequence. Run this to collect a new weather snapshot.
+
+### `extract.py`
+Hits the OpenWeather API and returns a raw dictionary of weather fields including temperature, humidity, wind speed, and description.
+
+### `transform.py`
+Takes the raw dictionary and:
+- Loads it into a pandas DataFrame
+- Renames columns to a consistent snake_case format
+- Converts the timestamp from string to datetime
+- Checks for and handles missing values
+- Adds new columns: `temp_f`, `wind_kmh`, `comfort_level`, `fetch_date`, `fetch_time`
+
+### `load.py`
+Saves the cleaned DataFrame to a SQLite database called `weather_data.db`. Each run appends a new row so data accumulates over time.
+
+### `queries.py`
+Runs SQL queries against the database to analyze collected data including averages, min/max temperatures, wind summaries, and comfort level breakdowns.
+
+---
+
+## Transformations Applied
+
+| New Column | Description |
+|---|---|
+| `temp_f` | Temperature converted from Celsius to Fahrenheit |
+| `wind_kmh` | Wind speed converted from m/s to km/h |
+| `comfort_level` | Temperature categorized as Very Cold / Cold / Cool / Warm / Hot |
+| `fetch_date` | Date extracted from the UTC timestamp |
+| `fetch_time` | Time extracted from the UTC timestamp |
+
+---
+
+## SQL Queries Included
+
+- All weather records
+- Average temperature and humidity by city
+- Min and max temperature by city
+- Record count grouped by comfort level
+- Most recent record
+- Wind speed summary (avg, min, max)
+
+---
+
+## Dependencies
+
+```
+requests
+pandas
+python-dotenv
+```
+
+Install all with:
+
+```bash
+pip install -r requirements.txt
+```
+
+---
+
+## What's Next
+
+This is the beginner version of a larger project. Planned improvements:
+
+- **Intermediate**: Schedule the pipeline to run automatically, store data in PostgreSQL
+- **Cloud**: Push data to AWS S3 and GCP BigQuery
+- **Advanced**: Add dbt for transformations, connect to a dashboard in Looker Studio
+
+---
+
+## Notes
+
+- `weather_data.db` is excluded from version control — it lives only on your local machine
+- `.env` is excluded from version control — never commit your API key
+- The pipeline collects one snapshot per run — run it multiple times or schedule it to build up historical data
+
+---
+
+## Author
+
+Jonathan Campbell — learning data engineering through building real projects alongside the Codecademy Data Engineer skill path.
