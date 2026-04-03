@@ -1,0 +1,15 @@
+# Weather ETL Pipeline
+
+## What it does
+Pulls live weather data from OpenWeather API and loads it into a pandas DataFrame.
+
+## Stack
+- Python, pandas, requests
+
+## Pipeline
+Extract (API) → Transform (pandas) → Load (SQLite)
+
+## How to run
+1. Clone the repo
+2. Add your API key to a .env file
+3. Run weather_api.py
