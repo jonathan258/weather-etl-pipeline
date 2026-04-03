@@ -37,6 +37,34 @@ weather_record = {
 
 # Convert to DataFrame
 df = pd.DataFrame([weather_record])
+#The next step in this is I am going to clean the data 
 
+#Rename the columns 
+
+df = df.rename(columns ={
+    "temperature_c": "temp_c",
+    "feels_like_c": "feels_like_c",
+    "humidity_pct": "humidity_pct",
+    "wind_speed_ms": "wind_ms",
+    "description": "weather_desc",
+    "fetched_at": "fetched_at_utc"
+})
+
+#change the fetched_at_utc to datetime format
+df["fetched_at_utc"] = pd.to_datetime(df["fetched_at_utc"], format="%Y-%m-%d %H:%M:%S")
+
+#Now I will check for missing values
+print("==Null Check==")
+print(df.isnull().sum())
+
+#Fill missing values if any 
+df["weather_desc"] = df["weather_desc"].fillna("unknown")
+df["temp_c"] = df["temp_c"].fillna(0.0)
+
+# Final output
+print("\n=== Cleaned DataFrame ===")
+pd.set_option("display.max_columns", None)
 print(df)
+
+print("\n=== Column Types ===")
 print(df.dtypes)
