@@ -1,367 +1,152 @@
-# 🌤️ Weather ETL Pipeline
+# Weather ETL Pipeline
 
-A simple **Python ETL pipeline** that collects live weather data from the OpenWeather API, transforms it with pandas, and stores the results in a local SQLite database for SQL analysis.
+A Python ETL pipeline that collects live weather data from the OpenWeather API, transforms it with pandas, and stores the results in a local SQLite database for SQL analysis.
 
-> 🎯 **Project Goal:** Practice the fundamentals of data engineering by building a complete Extract → Transform → Load pipeline from an external API to an analytical database.
+**Project Goal:** Practice the fundamentals of data engineering by building a complete Extract → Transform → Load pipeline from an external API to an analytical database.
 
----
+## Project Overview
 
-## 📌 Project Overview
+| Component | Technology |
+|---|---|
+| Language | Python |
+| API | OpenWeather API |
+| Transformation | pandas |
+| Database | SQLite |
+| SQL | SQLite SQL |
+| Configuration | python-dotenv |
 
-| Component          | Technology      |
-| ------------------ | --------------- |
-| **Language**       | Python          |
-| **API**            | OpenWeather API |
-| **Transformation** | pandas          |
-| **Database**       | SQLite          |
-| **SQL**            | SQLite SQL      |
-| **Configuration**  | python-dotenv   |
+**What the pipeline does:**
 
-### What the pipeline does
+Extracts live weather data from the OpenWeather API, processes and transforms it using Python and pandas, cleans and standardizes the incoming data, creates derived weather metrics, loads the transformed data into SQLite, and provides SQL queries for analyzing historical weather observations.
 
-* 🌐 Extracts live weather data from the OpenWeather API
-* 🐍 Processes and transforms the data using Python and pandas
-* 🧹 Cleans and standardizes the incoming data
-* 🌡️ Creates derived weather metrics
-* 💾 Loads the transformed data into SQLite
-* 🔎 Provides SQL queries for analyzing historical weather observations
+## Pipeline Architecture
 
----
+OpenWeather API → Extract (`extract.py`) → raw JSON data → Transform (`transform.py`: clean data, rename columns, convert units, add metrics) → pandas DataFrame → Load (`load.py`) → SQLite database (`weather_data.db`) → SQL Analysis (`queries.py`)
 
-## 🏗️ Pipeline Architecture
+## Project Structure
 
-```text
-                    ┌─────────────────────┐
-                    │   OpenWeather API   │
-                    └──────────┬──────────┘
-                               │
-                               ▼
-                    ┌─────────────────────┐
-                    │      EXTRACT        │
-                    │     extract.py      │
-                    └──────────┬──────────┘
-                               │
-                         Raw JSON Data
-                               │
-                               ▼
-                    ┌─────────────────────┐
-                    │     TRANSFORM       │
-                    │    transform.py     │
-                    │                     │
-                    │  • Clean data       │
-                    │  • Rename columns   │
-                    │  • Convert units    │
-                    │  • Add metrics      │
-                    └──────────┬──────────┘
-                               │
-                        pandas DataFrame
-                               │
-                               ▼
-                    ┌─────────────────────┐
-                    │       LOAD          │
-                    │      load.py        │
-                    └──────────┬──────────┘
-                               │
-                               ▼
-                    ┌─────────────────────┐
-                    │   SQLite Database   │
-                    │  weather_data.db    │
-                    └──────────┬──────────┘
-                               │
-                               ▼
-                    ┌─────────────────────┐
-                    │     SQL ANALYSIS    │
-                    │     queries.py      │
-                    └─────────────────────┘
 ```
-
----
-
-## 📂 Project Structure
-
-```text
 weather-etl-pipeline/
-│
-├── 📄 main.py
-├── 📄 extract.py
-├── 📄 transform.py
-├── 📄 load.py
-├── 📄 queries.py
-│
-├── 📄 requirements.txt
-├── 📄 .gitignore
-├── 🔐 .env
-│
-└── 🗄️ weather_data.db
+├── main.py
+├── extract.py
+├── transform.py
+├── load.py
+├── queries.py
+├── requirements.txt
+├── .gitignore
+├── .env
+└── weather_data.db
 ```
 
-> 🔐 `.env` and `weather_data.db` are local files and should **not** be committed to Git.
+Note: `.env` and `weather_data.db` are local files and should not be committed to Git.
 
----
+## ETL Process
 
-## 🔄 ETL Process
+**1. Extract** (`extract.py`)
 
-### 1️⃣ Extract
+Connects to the OpenWeather API and retrieves the current weather information. The API response includes temperature, humidity, wind speed, weather description, timestamp, and location. The API key is loaded securely from an environment variable.
 
-`extract.py`
+**2. Transform** (`transform.py`)
 
-Connects to the OpenWeather API and retrieves the current weather information.
+The raw API response is converted into a structured pandas DataFrame. Transformations include standardizing column names, converting timestamps, handling missing values, converting Celsius to Fahrenheit, converting m/s to km/h, creating a comfort_level classification, and extracting date and time fields.
 
-The API response includes information such as:
+Derived columns:
 
-* Temperature
-* Humidity
-* Wind speed
-* Weather description
-* Timestamp
-* Location
+| Column | Description |
+|---|---|
+| temp_f | Temperature converted from Celsius to Fahrenheit |
+| wind_kmh | Wind speed converted from m/s to km/h |
+| comfort_level | Temperature-based comfort classification |
+| fetch_date | Date extracted from the timestamp |
+| fetch_time | Time extracted from the timestamp |
 
-The API key is loaded securely from an environment variable.
+**3. Load** (`load.py`)
 
----
+The transformed DataFrame is loaded into a local SQLite database. Each pipeline execution appends a new weather observation, allowing historical data to accumulate over time.
 
-### 2️⃣ Transform
+Table `weather_data` columns: timestamp, city, temperature, humidity, wind_speed, temp_f, wind_kmh, comfort_level
 
-`transform.py`
+**4. Analyze** (`queries.py`)
 
-The raw API response is converted into a structured pandas DataFrame.
+SQL queries are included to analyze the collected weather data, including average temperature and humidity, minimum and maximum temperature, wind-speed statistics, comfort-level distribution, most recent weather observation, and total number of collected records.
 
-Transformations include:
+## Getting Started
 
-* Standardizing column names
-* Converting timestamps
-* Handling missing values
-* Converting Celsius → Fahrenheit
-* Converting m/s → km/h
-* Creating a `comfort_level` classification
-* Extracting date and time fields
+**Prerequisites:** Python 3.10+, Git, and an OpenWeather API key.
 
-### 📊 Derived Columns
+1. Clone the repository
 
-| Column          | Description                                      |
-| --------------- | ------------------------------------------------ |
-| `temp_f`        | Temperature converted from Celsius to Fahrenheit |
-| `wind_kmh`      | Wind speed converted from m/s to km/h            |
-| `comfort_level` | Temperature-based comfort classification         |
-| `fetch_date`    | Date extracted from the timestamp                |
-| `fetch_time`    | Time extracted from the timestamp                |
+   ```bash
+   git clone https://github.com/jonathan258/weather-etl-pipeline.git
+   cd weather-etl-pipeline
+   ```
 
----
+2. Install dependencies
 
-### 3️⃣ Load
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-`load.py`
+3. Configure your API key
 
-The transformed DataFrame is loaded into a local SQLite database.
+   Create a `.env` file in the project root:
 
-Each pipeline execution **appends a new weather observation**, allowing historical data to accumulate over time.
+   ```env
+   OPENWEATHER_API_KEY=your_api_key_here
+   ```
 
-```text
-weather_data.db
-└── weather_data
-    ├── timestamp
-    ├── city
-    ├── temperature
-    ├── humidity
-    ├── wind_speed
-    ├── temp_f
-    ├── wind_kmh
-    └── comfort_level
+   Never commit your API key to GitHub.
+
+4. Run the pipeline
+
+   ```bash
+   python main.py
+   ```
+
+   The pipeline runs Extract → Transform → Load and creates or updates `weather_data.db`.
+
+5. Run the SQL analysis
+
+   ```bash
+   python queries.py
+   ```
+
+## Dependencies
+
 ```
-
----
-
-### 4️⃣ Analyze
-
-`queries.py`
-
-SQL queries are included to analyze the collected weather data.
-
-Examples include:
-
-* 📊 Average temperature and humidity
-* 🌡️ Minimum and maximum temperature
-* 💨 Wind-speed statistics
-* 🧊 Comfort-level distribution
-* 🕐 Most recent weather observation
-* 🔢 Total number of collected records
-
----
-
-## 🚀 Getting Started
-
-### Prerequisites
-
-Make sure you have:
-
-* Python 3.10+
-* Git
-* An OpenWeather API key
-
-### 1. Clone the repository
-
-```bash
-git clone https://github.com/jonathan258/weather-etl-pipeline.git
-cd weather-etl-pipeline
-```
-
-### 2. Install dependencies
-
-```bash
-pip install -r requirements.txt
-```
-
-### 3. Configure your API key
-
-Create a `.env` file in the project root:
-
-```env
-OPENWEATHER_API_KEY=your_api_key_here
-```
-
-⚠️ **Never commit your API key to GitHub.**
-
-### 4. Run the pipeline
-
-```bash
-python main.py
-```
-
-The pipeline will:
-
-```text
-Extract → Transform → Load
-```
-
-and create/update:
-
-```text
-weather_data.db
-```
-
-### 5. Run the SQL analysis
-
-```bash
-python queries.py
-```
-
----
-
-## 📦 Dependencies
-
-```text
 requests
 pandas
 python-dotenv
 ```
 
-Install everything with:
+Install everything with `pip install -r requirements.txt`.
 
-```bash
-pip install -r requirements.txt
-```
+## Security
 
----
+Sensitive configuration is handled through environment variables. The following files are excluded from version control: `.env` and `weather_data.db`. This prevents API credentials and locally generated database files from being pushed to the repository.
 
-## 🔐 Security
+## What I Learned
 
-Sensitive configuration is handled through environment variables.
+This project helped me practice several foundational data engineering concepts: Python programming, REST API ingestion, JSON data processing, pandas transformations, ETL pipeline design, data cleaning, SQL, SQLite, environment variables, Git/GitHub, and separating extraction, transformation, and loading logic.
 
-The following files are excluded from version control:
-
-```text
-.env
-weather_data.db
-```
-
-This prevents API credentials and locally generated database files from being pushed to the repository.
-
----
-
-## 🎓 What I Learned
-
-This project helped me practice several foundational data engineering concepts:
-
-* Python programming
-* REST API ingestion
-* JSON data processing
-* pandas transformations
-* ETL pipeline design
-* Data cleaning
-* SQL
-* SQLite
-* Environment variables
-* Git/GitHub
-* Separating extraction, transformation, and loading logic
-
----
-
-## 🔮 Future Improvements
+## Future Improvements
 
 This project represents an early version of my data engineering work.
 
-Potential improvements include:
+**Intermediate:** automated scheduling, logging, error handling and API retries, unit tests, moving from SQLite to PostgreSQL.
 
-### Intermediate
+**Cloud:** storing raw data in AWS S3, processing data using cloud services, loading analytical data into Google BigQuery, introducing workflow orchestration.
 
-* [ ] Add automated scheduling
-* [ ] Add logging
-* [ ] Add error handling and API retries
-* [ ] Add unit tests
-* [ ] Move from SQLite to PostgreSQL
+**Advanced:** dbt transformations, automated data-quality checks, CI/CD with GitHub Actions, monitoring and alerting, a weather analytics dashboard, incremental processing.
 
-### Cloud
+## Project Evolution
 
-* [ ] Store raw data in AWS S3
-* [ ] Process data using cloud services
-* [ ] Load analytical data into Google BigQuery
-* [ ] Introduce workflow orchestration
+This project started as a small local ETL exercise. The longer-term goal is to take the same core pipeline concept and progressively introduce PostgreSQL, cloud storage, a cloud data warehouse, orchestration, testing and CI/CD, and monitoring and data quality checks — moving from a simple local ETL script toward a more production-oriented data engineering pipeline.
 
-### Advanced
-
-* [ ] Add dbt transformations
-* [ ] Implement automated data-quality checks
-* [ ] Add CI/CD with GitHub Actions
-* [ ] Add monitoring and alerting
-* [ ] Build a weather analytics dashboard
-* [ ] Introduce incremental processing
-
----
-
-## 📈 Project Evolution
-
-This project started as a small local ETL exercise.
-
-The longer-term goal is to take the same core pipeline concept and progressively introduce:
-
-```text
-Local Python ETL
-       ↓
-PostgreSQL
-       ↓
-Cloud Storage
-       ↓
-Cloud Data Warehouse
-       ↓
-Orchestration
-       ↓
-Testing + CI/CD
-       ↓
-Monitoring + Data Quality
-```
-
-This provides a practical path from a simple ETL script toward a more production-oriented data engineering pipeline.
-
----
-
-## 👨‍💻 Author
+## Author
 
 **Jonathan Campbell**
 
-Aspiring Data Engineer focused on building practical projects with:
+Aspiring Data Engineer focused on building practical projects with Python, SQL, PySpark, Databricks, GCP, and AWS.
 
-**Python • SQL • PySpark • Databricks • GCP • AWS**
-
----
-
-⭐ If you found this project useful, feel free to explore the repository and follow its progression as the pipeline evolves.
+If you found this project useful, feel free to explore the repository and follow its progression as the pipeline evolves.
