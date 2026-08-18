@@ -1,189 +1,227 @@
-# Weather ETL Pipeline
+# 🌤️ Weather ETL Pipeline
 
-A Python-based ETL pipeline that retrieves weather data from the OpenWeather API, transforms the data with pandas, and loads it into a local SQLite database for analysis.
+A simple **Python ETL pipeline** that collects live weather data from the OpenWeather API, transforms it with pandas, and stores the results in a local SQLite database for SQL analysis.
 
-This project was built as an early data engineering project to practice core ETL concepts including API ingestion, data transformation, database loading, environment variables, and SQL analysis.
+> 🎯 **Project Goal:** Practice the fundamentals of data engineering by building a complete Extract → Transform → Load pipeline from an external API to an analytical database.
 
 ---
 
-## Overview
+## 📌 Project Overview
 
-The pipeline follows a simple **Extract → Transform → Load (ETL)** architecture:
+| Component          | Technology      |
+| ------------------ | --------------- |
+| **Language**       | Python          |
+| **API**            | OpenWeather API |
+| **Transformation** | pandas          |
+| **Database**       | SQLite          |
+| **SQL**            | SQLite SQL      |
+| **Configuration**  | python-dotenv   |
+
+### What the pipeline does
+
+* 🌐 Extracts live weather data from the OpenWeather API
+* 🐍 Processes and transforms the data using Python and pandas
+* 🧹 Cleans and standardizes the incoming data
+* 🌡️ Creates derived weather metrics
+* 💾 Loads the transformed data into SQLite
+* 🔎 Provides SQL queries for analyzing historical weather observations
+
+---
+
+## 🏗️ Pipeline Architecture
 
 ```text
-OpenWeather API
-       │
-       ▼
-   Extract
-  extract.py
-       │
-       ▼
-  Transform
- transform.py
-       │
-       ▼
-     Load
-    load.py
-       │
-       ▼
-SQLite Database
-weather_data.db
-       │
-       ▼
-  SQL Analysis
-  queries.py
+                    ┌─────────────────────┐
+                    │   OpenWeather API   │
+                    └──────────┬──────────┘
+                               │
+                               ▼
+                    ┌─────────────────────┐
+                    │      EXTRACT        │
+                    │     extract.py      │
+                    └──────────┬──────────┘
+                               │
+                         Raw JSON Data
+                               │
+                               ▼
+                    ┌─────────────────────┐
+                    │     TRANSFORM       │
+                    │    transform.py     │
+                    │                     │
+                    │  • Clean data       │
+                    │  • Rename columns   │
+                    │  • Convert units    │
+                    │  • Add metrics      │
+                    └──────────┬──────────┘
+                               │
+                        pandas DataFrame
+                               │
+                               ▼
+                    ┌─────────────────────┐
+                    │       LOAD          │
+                    │      load.py        │
+                    └──────────┬──────────┘
+                               │
+                               ▼
+                    ┌─────────────────────┐
+                    │   SQLite Database   │
+                    │  weather_data.db    │
+                    └──────────┬──────────┘
+                               │
+                               ▼
+                    ┌─────────────────────┐
+                    │     SQL ANALYSIS    │
+                    │     queries.py      │
+                    └─────────────────────┘
 ```
 
-The pipeline collects a weather snapshot each time it runs. Repeated executions allow historical weather data to accumulate in the database.
-
 ---
 
-## What It Does
-
-* Retrieves live weather data from the OpenWeather API
-* Extracts weather information for Charlottetown, Prince Edward Island
-* Transforms raw API data into a structured pandas DataFrame
-* Standardizes column names and data types
-* Converts temperature and wind-speed units
-* Creates derived weather attributes
-* Loads transformed records into a local SQLite database
-* Provides SQL queries for analyzing collected weather data
-
----
-
-## Project Structure
+## 📂 Project Structure
 
 ```text
 weather-etl-pipeline/
 │
-├── .env                  # Local environment variables — never commit
-├── .gitignore            # Git exclusions
-├── requirements.txt      # Python dependencies
+├── 📄 main.py
+├── 📄 extract.py
+├── 📄 transform.py
+├── 📄 load.py
+├── 📄 queries.py
 │
-├── main.py               # Pipeline entry point
-├── extract.py            # API extraction logic
-├── transform.py          # Data transformation logic
-├── load.py               # Database loading logic
-└── queries.py            # SQL analysis queries
+├── 📄 requirements.txt
+├── 📄 .gitignore
+├── 🔐 .env
+│
+└── 🗄️ weather_data.db
 ```
 
----
-
-## ETL Process
-
-### 1. Extract
-
-`extract.py` is responsible for communicating with the OpenWeather API.
-
-The extraction layer:
-
-* Authenticates using an API key stored in an environment variable
-* Requests the current weather for the configured location
-* Retrieves the API response
-* Returns the raw weather data for transformation
-
-Sensitive credentials are stored in `.env` rather than being hard-coded into the application.
+> 🔐 `.env` and `weather_data.db` are local files and should **not** be committed to Git.
 
 ---
 
-### 2. Transform
+## 🔄 ETL Process
 
-`transform.py` converts the raw API response into a structured pandas DataFrame.
+### 1️⃣ Extract
+
+`extract.py`
+
+Connects to the OpenWeather API and retrieves the current weather information.
+
+The API response includes information such as:
+
+* Temperature
+* Humidity
+* Wind speed
+* Weather description
+* Timestamp
+* Location
+
+The API key is loaded securely from an environment variable.
+
+---
+
+### 2️⃣ Transform
+
+`transform.py`
+
+The raw API response is converted into a structured pandas DataFrame.
 
 Transformations include:
 
 * Standardizing column names
-* Converting timestamps into datetime values
+* Converting timestamps
 * Handling missing values
-* Converting Celsius to Fahrenheit
-* Converting wind speed from meters/second to kilometers/hour
-* Creating a weather comfort classification
-* Extracting date and time fields from the timestamp
+* Converting Celsius → Fahrenheit
+* Converting m/s → km/h
+* Creating a `comfort_level` classification
+* Extracting date and time fields
 
-### Derived Columns
+### 📊 Derived Columns
 
 | Column          | Description                                      |
 | --------------- | ------------------------------------------------ |
 | `temp_f`        | Temperature converted from Celsius to Fahrenheit |
 | `wind_kmh`      | Wind speed converted from m/s to km/h            |
-| `comfort_level` | Temperature categorized into a comfort range     |
-| `fetch_date`    | Date extracted from the weather timestamp        |
-| `fetch_time`    | Time extracted from the weather timestamp        |
+| `comfort_level` | Temperature-based comfort classification         |
+| `fetch_date`    | Date extracted from the timestamp                |
+| `fetch_time`    | Time extracted from the timestamp                |
 
 ---
 
-### 3. Load
+### 3️⃣ Load
 
-`load.py` loads the transformed DataFrame into a local SQLite database.
+`load.py`
 
-Each pipeline execution appends a new weather record, allowing the database to build a historical dataset over time.
+The transformed DataFrame is loaded into a local SQLite database.
 
-Database:
+Each pipeline execution **appends a new weather observation**, allowing historical data to accumulate over time.
 
 ```text
 weather_data.db
+└── weather_data
+    ├── timestamp
+    ├── city
+    ├── temperature
+    ├── humidity
+    ├── wind_speed
+    ├── temp_f
+    ├── wind_kmh
+    └── comfort_level
 ```
-
-The SQLite database is intentionally excluded from Git because it is generated locally by the pipeline.
 
 ---
 
-## SQL Analysis
+### 4️⃣ Analyze
 
-`queries.py` contains SQL queries used to analyze the collected weather data.
+`queries.py`
+
+SQL queries are included to analyze the collected weather data.
 
 Examples include:
 
-* Retrieve all weather records
-* Calculate average temperature and humidity
-* Find minimum and maximum temperatures
-* Count records by comfort level
-* Retrieve the most recent weather observation
-* Calculate average, minimum, and maximum wind speed
-
-These queries provide a simple analytical layer on top of the collected data.
+* 📊 Average temperature and humidity
+* 🌡️ Minimum and maximum temperature
+* 💨 Wind-speed statistics
+* 🧊 Comfort-level distribution
+* 🕐 Most recent weather observation
+* 🔢 Total number of collected records
 
 ---
 
-## Getting Started
+## 🚀 Getting Started
 
 ### Prerequisites
 
-* Python 3.10+
-* An OpenWeather API key
-* Git
+Make sure you have:
 
-### 1. Clone the Repository
+* Python 3.10+
+* Git
+* An OpenWeather API key
+
+### 1. Clone the repository
 
 ```bash
 git clone https://github.com/jonathan258/weather-etl-pipeline.git
-
 cd weather-etl-pipeline
 ```
 
-### 2. Install Dependencies
+### 2. Install dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 3. Create an OpenWeather API Key
-
-Create an account with OpenWeather and generate an API key.
-
-New API keys may require some time before they become active.
-
-### 4. Configure Environment Variables
+### 3. Configure your API key
 
 Create a `.env` file in the project root:
 
-```text
+```env
 OPENWEATHER_API_KEY=your_api_key_here
 ```
 
-Do **not** commit this file to Git.
+⚠️ **Never commit your API key to GitHub.**
 
-### 5. Run the Pipeline
+### 4. Run the pipeline
 
 ```bash
 python main.py
@@ -201,7 +239,7 @@ and create/update:
 weather_data.db
 ```
 
-### 6. Run SQL Analysis
+### 5. Run the SQL analysis
 
 ```bash
 python queries.py
@@ -209,9 +247,7 @@ python queries.py
 
 ---
 
-## Dependencies
-
-The project uses the following Python libraries:
+## 📦 Dependencies
 
 ```text
 requests
@@ -219,7 +255,7 @@ pandas
 python-dotenv
 ```
 
-Install them with:
+Install everything with:
 
 ```bash
 pip install -r requirements.txt
@@ -227,122 +263,105 @@ pip install -r requirements.txt
 
 ---
 
-## Data Flow
+## 🔐 Security
 
-A typical execution looks like:
+Sensitive configuration is handled through environment variables.
 
-```text
-OpenWeather API
-      │
-      │ JSON response
-      ▼
-extract.py
-      │
-      │ raw weather data
-      ▼
-transform.py
-      │
-      │ pandas DataFrame
-      ▼
-load.py
-      │
-      │ INSERT
-      ▼
-weather_data.db
-      │
-      ▼
-queries.py
-      │
-      ▼
-SQL Analysis
-```
-
----
-
-## Security
-
-API credentials are managed through environment variables.
-
-The following files should never be committed:
+The following files are excluded from version control:
 
 ```text
 .env
 weather_data.db
 ```
 
-The `.gitignore` file is configured to prevent these files from being tracked.
+This prevents API credentials and locally generated database files from being pushed to the repository.
 
 ---
 
-## Current Limitations
+## 🎓 What I Learned
 
-This project is intentionally simple and represents an earlier stage of the learning journey.
+This project helped me practice several foundational data engineering concepts:
 
-Current limitations include:
-
-* Local SQLite storage
-* Manual pipeline execution
-* No orchestration
-* No automated testing
-* No cloud storage
-* No data quality framework
-* No production monitoring or alerting
-* Single-location ingestion
+* Python programming
+* REST API ingestion
+* JSON data processing
+* pandas transformations
+* ETL pipeline design
+* Data cleaning
+* SQL
+* SQLite
+* Environment variables
+* Git/GitHub
+* Separating extraction, transformation, and loading logic
 
 ---
 
-## Future Improvements
+## 🔮 Future Improvements
 
-Possible extensions include:
+This project represents an early version of my data engineering work.
+
+Potential improvements include:
 
 ### Intermediate
 
-* Add automated scheduling
-* Introduce PostgreSQL
-* Add unit and integration tests
-* Improve logging and error handling
-* Add configuration management
-* Implement retry handling for API failures
+* [ ] Add automated scheduling
+* [ ] Add logging
+* [ ] Add error handling and API retries
+* [ ] Add unit tests
+* [ ] Move from SQLite to PostgreSQL
 
 ### Cloud
 
-* Store raw API responses in Amazon S3
-* Process data using AWS services
-* Load analytical data into Google BigQuery
-* Introduce cloud-based orchestration
+* [ ] Store raw data in AWS S3
+* [ ] Process data using cloud services
+* [ ] Load analytical data into Google BigQuery
+* [ ] Introduce workflow orchestration
 
 ### Advanced
 
-* Add dbt for SQL transformations
-* Implement data quality checks
-* Add CI/CD with GitHub Actions
-* Add monitoring and pipeline alerting
-* Build a dashboard using a BI platform
-* Introduce incremental processing
-* Separate raw, transformed, and analytical datasets
+* [ ] Add dbt transformations
+* [ ] Implement automated data-quality checks
+* [ ] Add CI/CD with GitHub Actions
+* [ ] Add monitoring and alerting
+* [ ] Build a weather analytics dashboard
+* [ ] Introduce incremental processing
 
 ---
 
-## Learning Objectives
+## 📈 Project Evolution
 
-This project provided hands-on practice with:
+This project started as a small local ETL exercise.
 
-* Python
-* REST APIs
-* JSON data
-* pandas
-* ETL architecture
-* Data transformation
-* SQLite
-* SQL
-* Environment variables
-* Git and GitHub
-* Basic data engineering project structure
+The longer-term goal is to take the same core pipeline concept and progressively introduce:
+
+```text
+Local Python ETL
+       ↓
+PostgreSQL
+       ↓
+Cloud Storage
+       ↓
+Cloud Data Warehouse
+       ↓
+Orchestration
+       ↓
+Testing + CI/CD
+       ↓
+Monitoring + Data Quality
+```
+
+This provides a practical path from a simple ETL script toward a more production-oriented data engineering pipeline.
 
 ---
 
-## Author
+## 👨‍💻 Author
 
 **Jonathan Campbell**
 
-Data engineering learner focused on building practical projects with Python, SQL, PySpark, cloud platforms, and modern data engineering technologies.
+Aspiring Data Engineer focused on building practical projects with:
+
+**Python • SQL • PySpark • Databricks • GCP • AWS**
+
+---
+
+⭐ If you found this project useful, feel free to explore the repository and follow its progression as the pipeline evolves.
